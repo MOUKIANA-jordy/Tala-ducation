@@ -1,0 +1,96 @@
+version: "3.9"
+
+services:
+  db:
+    image: mysql:8
+    container_name: tala_mysql
+    restart: always
+    environment:
+      MYSQL_ROOT_PASSWORD: rootpassword
+      MYSQL_DATABASE: tala_db
+      MYSQL_USER: tala_user
+      MYSQL_PASSWORD: tala_pass
+    ports:
+      - "3306:3306"
+    volumes:
+      - mysql_data:/var/lib/mysql
+    networks:
+      - tala-net
+
+  phpmyadmin:
+    image: phpmyadmin/phpmyadmin
+    restart: always
+    ports:
+      - "8082:80"
+    environment:
+      PMA_HOST: db
+      PMA_USER: tala_user
+      PMA_PASSWORD: tala_pass
+    networks:
+      - tala-net
+
+  backend:
+    build: ./backend
+    container_name: tala_backend
+    command: >
+      sh -c "
+      python manage.py migrate &&
+      gunicorn tala.wsgi:application --bind 0.0.0.0:8000
+      "
+    volumes:
+      - ./backend:/app
+    ports:
+      - "8000:8000"
+    depends_on:
+      - db
+      - redis
+    environment:
+      DB_NAME: tala_db
+      DB_USER: tala_user
+      DB_PASSWORD: tala_pass
+      DB_HOST: db
+    networks:
+      - tala-net
+
+  frontend:
+    build: ./frontend/tala-front
+    container_name: tala_frontend
+    ports:
+      - "3000:3000"
+    volumes:
+      - ./frontend/tala-front:/app
+      - /app/node_modules
+    stdin_open: true
+    tty: true
+    networks:
+      - tala-net
+
+  redis:
+    image: redis:alpine
+    container_name: tala_redis
+    restart: always
+    ports:
+      - "6379:6379"
+    networks:
+      - tala-net
+
+  nginx:
+    image: nginx:latest
+    container_name: tala_nginx
+    restart: always
+    volumes:
+      - ./nginx/nginx.conf:/etc/nginx/nginx.conf
+    ports:
+      - "80:80"
+      - "443:443"
+    depends_on:
+      - backend
+      - frontend
+    networks:
+      - tala-net
+
+networks:
+  tala-net:
+
+volumes:
+  mysql_data:
