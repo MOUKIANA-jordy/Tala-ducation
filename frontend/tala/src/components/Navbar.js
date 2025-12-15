@@ -14,7 +14,7 @@ export default function Navbar() {
       <h1>Tala</h1>
       <div>
         <Link to="/login" style={{ marginRight: "15px", color: "white" }}>Login</Link>
-        <Link to="/signup" style={{ color: "white" }}>Signup</Link>
+        <Link to="/register" style={{ color: "white" }}>Register</Link>
       </div>
     </nav>
   );

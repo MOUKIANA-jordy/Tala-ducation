@@ -1,6 +1,6 @@
 import React, { useState } from "react";
 import axios from "axios";
-import "./Auth.css";
+import "../styles/Auth.css";
 
 const ForgotPassword = () => {
   const [email, setEmail] = useState("");
